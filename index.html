@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Ultimate Question</title>
     <style>
         body { 
@@ -16,9 +16,10 @@
             justify-content: center; 
             height: 100vh; 
             overflow: hidden; 
+            touch-action: manipulation;
         }
-        h1 { font-size: 2.5rem; margin-bottom: 40px; text-align: center; color: #f8fafc; }
-        .btn-group { display: flex; gap: 30px; align-items: center; justify-content: center; width: 100%; height: 100px; }
+        h1 { font-size: 2rem; margin-bottom: 40px; text-align: center; padding: 0 20px; }
+        .btn-group { position: relative; width: 100%; height: 300px; display: flex; justify-content: center; align-items: center; }
         
         button { 
             padding: 20px 40px; 
@@ -26,13 +27,13 @@
             border: none; 
             border-radius: 15px; 
             cursor: pointer; 
-            transition: all 0.2s ease; 
+            transition: transform 0.2s ease, box-shadow 0.2s ease; 
         }
 
         #siennaBtn { 
             background: #22c55e; 
             color: white; 
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); 
+            z-index: 10;
         }
         
         #caseyBtn { 
@@ -40,6 +41,7 @@
             color: white; 
             position: absolute; 
             z-index: 100;
+            touch-action: none; /* Prevents the phone from trying to zoom or scroll */
         }
 
         .success-screen { 
@@ -52,47 +54,55 @@
             justify-content: center; 
             z-index: 1000; 
         }
-        #casey-count { font-size: 0.8rem; margin-top: 10px; color: #64748b; }
     </style>
 </head>
 <body>
 
-    <div id="main-content">
+    <div id="main-content" style="text-align: center;">
         <h1>Who is your favorite child?</h1>
         <div class="btn-group">
             <button id="siennaBtn" onclick="win()">Sienna</button>
-            <button id="caseyBtn" onmouseover="runAway()">Casey</button>
+            <button id="caseyBtn" onmouseover="runAway(event)" ontouchstart="runAway(event)">Casey</button>
         </div>
-        <p id="casey-count">Failed "Casey" attempts: 0</p>
+        <p id="casey-count" style="margin-top: 20px; color: #64748b;">Failed "Casey" attempts: 0</p>
     </div>
 
     <div class="success-screen" id="winScreen">
-        <h1 style="font-size: 4rem;">Obviously! ✨</h1>
-        <p style="font-size: 1.5rem;">Sienna is the clear winner.</p>
-        <button onclick="location.reload()" style="margin-top: 20px; background: #64748b; color: white; padding: 10px 20px; font-size: 1rem;">Try again (if you dare)</button>
+        <h1 style="font-size: 3rem;">Obviously! ✨</h1>
+        <p style="font-size: 1.2rem;">Sienna is the clear winner.</p>
+        <button onclick="location.reload()" style="margin-top: 20px; background: #64748b; color: white; padding: 10px 20px;">Try again?</button>
     </div>
 
     <script>
         let attempts = 0;
         let siennaScale = 1;
 
-        function runAway() {
+        function runAway(e) {
+            // This prevents the "click" from happening and stops scrolling
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
             const btn = document.getElementById('caseyBtn');
             
-            // Generate random position within the viewport
-            const x = Math.random() * (window.innerWidth - btn.offsetWidth);
-            const y = Math.random() * (window.innerHeight - btn.offsetHeight);
+            // Calculate new position while keeping the button inside the visible screen
+            const padding = 20;
+            const maxX = window.innerWidth - btn.offsetWidth - padding;
+            const maxY = window.innerHeight - btn.offsetHeight - padding;
+            
+            const randomX = Math.max(padding, Math.random() * maxX);
+            const randomY = Math.max(padding, Math.random() * maxY);
             
             btn.style.position = 'fixed';
-            btn.style.left = x + 'px';
-            btn.style.top = y + 'px';
+            btn.style.left = randomX + 'px';
+            btn.style.top = randomY + 'px';
 
-            // Increase Sienna's button size every time they miss Casey
+            // Boost Sienna!
             attempts++;
-            siennaScale += 0.2;
+            siennaScale += 0.15;
             const sienna = document.getElementById('siennaBtn');
             sienna.style.transform = `scale(${siennaScale})`;
-            sienna.style.boxShadow = `0 0 ${attempts * 10}px #22c55e`;
             
             document.getElementById('casey-count').innerText = `Failed "Casey" attempts: ${attempts}`;
         }
